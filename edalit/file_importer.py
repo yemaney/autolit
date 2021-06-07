@@ -2,7 +2,6 @@ import pandas as pd
 
 
 class File:
-    Data = None
     
     def __init__(self, file) -> None:
         self.file = file
