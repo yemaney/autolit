@@ -2,7 +2,7 @@ import pandas as pd
 
 class Type_Check:
     
-    def __init__(self, df) -> None:
+    def __init__(self, df: pd.DataFrame) -> None:
         self.df = df
     
     def numeric(self):
