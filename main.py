@@ -1,7 +1,7 @@
 import streamlit as st
-from edalit.file_importer import File
-from edalit.data_reader import Information
-from edalit import SessionState
+from autolit.file_importer import File
+from autolit.data_reader import Information
+from autolit import SessionState
 
 session_state = SessionState.get(DATA=None)
 
@@ -10,9 +10,9 @@ section = st.sidebar.selectbox('Section', ('Home', 'File Upload'))
 
 
 if section == 'Home':
-    st.title('Edalit')
+    st.title('Autolit')
     
-    st.write('Streamlining explanatory data analysis of tabular information, and wrapping it in a streamlit app.')
+    st.write('Streamlining explanatory data analysis and machine-learning of tabular information, and wrapping it in a streamlit app.')
     
 elif section == 'File Upload':
     st.title('Upload Data to Explore')
