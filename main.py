@@ -4,12 +4,21 @@ from autolit.file_importer import File
 from autolit.data_reader import Information
 from autolit.plotter import Plotter
 from autolit.slide import SlideShow
+from autolit.autopipe import Autolitpred
 from autolit import SessionState
+
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+from sklearn.utils import estimator_html_repr
 
 session_state = SessionState.get(DATA=None, df=None)
 
 
-section = st.sidebar.selectbox('Section', ('Home', 'Explore Data', 'Plots'))
+section = st.sidebar.selectbox('Section', ('Home', 'Explore Data', 'Plots', 'Modeling'))
 
 
 if section == 'Home':
@@ -102,3 +111,60 @@ elif section == 'Plots':
         st.write('---')
         st.subheader('Correlation Plots')
         components.html(corr_sl, height=400,scrolling=True)
+        
+elif section == 'Modeling':
+    if session_state.df is None:
+        st.title('Upload Data to Explore')
+        
+    else:
+        st.title('Modeling the Data')
+        
+
+        data = session_state.df
+
+        st.markdown('---')
+        with st.form('Contruct Pipeline'):
+            st.header('Contruct Pipeline')
+
+            st.subheader('Predictors')
+            numeric_features = st.multiselect('Numeric Features', data.select_dtypes('number').columns)
+            numeric_transformer = st.multiselect('Numeric Transformer', [SimpleImputer(), StandardScaler()])
+
+            st.markdown('---')
+
+            categorical_features = st.multiselect('Categorical Features', data.select_dtypes('object').columns)
+            categorical_transformer = st.multiselect('Categorical Transformer', [SimpleImputer(strategy='most_frequent'), OneHotEncoder()])
+
+            st.markdown('---')
+            st.subheader('Target')
+
+            target = st.selectbox('Target', data.columns)
+
+            st.markdown('---')
+            st.subheader('Algorithm')
+            
+            algo = st.selectbox('algorithm', (LogisticRegression(), RandomForestClassifier()))
+
+            if st.form_submit_button('Start Pipeline'):
+
+                st.markdown('---')
+
+                al = Autolitpred(numeric_features,
+                                        categorical_features,
+                                        numeric_transformer,
+                                        categorical_transformer,
+                                        algo)
+                
+                pred = al.pipline()
+                
+                
+                st.header('Pipeline Schema')
+                st.components.v1.html(estimator_html_repr(pred), scrolling=True)
+                
+                
+                st.header('Pipeline Evaluation')
+                X_train, X_test, y_train, y_test = train_test_split(data[numeric_features + categorical_features], data[target], test_size=0.2,
+                                                                    random_state=0)
+
+                pred.fit(X_train, y_train)
+                st.write(f'Accuracy {pred.score(X_test, y_test)}')
