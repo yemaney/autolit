@@ -5,17 +5,15 @@ from autolit.data_reader import Information
 from autolit.plotter import Plotter
 from autolit.slide import SlideShow
 from autolit.autopipe import Autolitpred
-from autolit import SessionState
 
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-
+from sklearn.ensemble import AdaBoostClassifier
+from xgboost import XGBClassifier
 from sklearn.utils import estimator_html_repr
-
-session_state = SessionState.get(DATA=None, df=None)
 
 
 section = st.sidebar.selectbox('Section', ('Home', 'Explore Data', 'Plots', 'Modeling'))
@@ -29,55 +27,58 @@ if section == 'Home':
              
              Upload a csv or xls file below, before going through the modules below in the sidebar.
              ''')
-    
-    upload = st.file_uploader(label='File Here')
-    session_state.DATA = upload
-
+    if st.button('Import Loan Status Data', help='Small data with information in connection with loan application. The goal is to predict the loan status.'):
+        upload = 'data/data.csv'
+        st.session_state.DATA = upload
+        st.success('Loan Status Data has been chosen.')
+    else:
+        upload = st.file_uploader(label='File Here')
+        st.session_state.DATA = upload
     image = 'https://images.unsplash.com/photo-1543286386-713bdd548da4?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80'
     st.image(image, 'Data is Interesting')
 elif section == 'Explore Data':
-    st.title('Upload Data to Explore')
-    
-    file_type = st.selectbox(label='filetype', options=('csv', 'xls'))
-    if file_type == 'csv':
-        with st.form('Import csv'):
-            st.subheader('Import csv file here')
-            file = File(session_state.DATA)
-            sep = st.selectbox('seperator', (',', ';', '    '), help='blank selection is for tab seperated sheets.')
-            csv_submitted = st.form_submit_button('Import csv')
-            if csv_submitted:
-                file = file.import_csv(sep)
-                session_state.df = file
-                file
-                
-                IF = Information(file)
-                info = IF.information()
-                info
-                desc = IF.describe()
-                desc
-    elif file_type == 'xls':   
-        with st.form('Import xls'):
-            st.subheader('Import xls file here')
-            file = File(session_state.DATA)
-            sheetnames = file.xls_sheets()
-            sheetname = st.selectbox('sheetname', (sheetnames), help='Choose which excel sheet to use data from.')
-            xls_submitted = st.form_submit_button('Import xls')
-            if xls_submitted:
-                file = file.import_xls(sheetname)
-                session_state.df = file
-                file
-                
-                IF = Information(file)
-                info = IF.information()
-                info
-                desc = IF.describe()
-                desc
+    if st.session_state.DATA is None:
+        st.title('Upload Data to Explore')
+    else:
+        file_type = st.selectbox(label='filetype', options=('csv', 'xls'))
+        if file_type == 'csv':
+            with st.form('Import csv'):
+                st.subheader('Import csv file here')
+                file = File(st.session_state.DATA)
+                sep = st.selectbox('seperator', (',', ';', '    '), help='blank selection is for tab seperated sheets.')
+                csv_submitted = st.form_submit_button('Import csv')
+                if csv_submitted:
+                    file = file.import_csv(sep)
+                    st.session_state.df = file
+                    file
+                    
+                    IF = Information(file)
+                    info = IF.information()
+                    info
+                    desc = IF.describe()
+                    desc
+        elif file_type == 'xls':   
+            with st.form('Import xls'):
+                st.subheader('Import xls file here')
+                file = File(st.session_state.DATA)
+                sheetnames = file.xls_sheets()
+                sheetname = st.selectbox('sheetname', (sheetnames), help='Choose which excel sheet to use data from.')
+                xls_submitted = st.form_submit_button('Import xls')
+                if xls_submitted:
+                    file = file.import_xls(sheetname)
+                    st.session_state.df = file
+                    file
+                    
+                    IF = Information(file)
+                    info = IF.information()
+                    info
+                    desc = IF.describe()
+                    desc
                     
 
 elif section == 'Plots':
-    if session_state.df is None:
+    if 'df' not in st.session_state:
         st.title('Upload Data to Explore')
-    
     else:
         st.title('Autogenerated plots')
         st.write('''
@@ -85,9 +86,9 @@ elif section == 'Plots':
                 - Correlation plots are displayed in descending order, with respect to their correlation.
                 
                 ---''')
-
-        df = session_state.df
-
+        df = st.session_state.df
+        if len(df) > 5000:
+            df = st.session_state.df.sample(5000, random_state=0)
         info = Information(df)
         skew_list = info.skew_list()
         corr_list, _ = info.corr_list()
@@ -112,15 +113,19 @@ elif section == 'Plots':
         st.subheader('Correlation Plots')
         components.html(corr_sl, height=400,scrolling=True)
         
+        f = open('test.html', 'w')
+        f.write(corr_sl)
+        f.close()    
+        
 elif section == 'Modeling':
-    if session_state.df is None:
+    if 'df' not in st.session_state:
         st.title('Upload Data to Explore')
         
     else:
         st.title('Modeling the Data')
         
 
-        data = session_state.df
+        data = st.session_state.df
 
         st.markdown('---')
         with st.form('Contruct Pipeline'):
@@ -128,12 +133,11 @@ elif section == 'Modeling':
 
             st.subheader('Predictors')
             numeric_features = st.multiselect('Numeric Features', data.select_dtypes('number').columns)
-            numeric_transformer = st.multiselect('Numeric Transformer', [SimpleImputer(), StandardScaler()])
-
+            numeric_transformer = [SimpleImputer(), StandardScaler()]
             st.markdown('---')
 
             categorical_features = st.multiselect('Categorical Features', data.select_dtypes('object').columns)
-            categorical_transformer = st.multiselect('Categorical Transformer', [SimpleImputer(strategy='most_frequent'), OneHotEncoder()])
+            categorical_transformer = [SimpleImputer(strategy='most_frequent'), OneHotEncoder()]
 
             st.markdown('---')
             st.subheader('Target')
@@ -143,7 +147,7 @@ elif section == 'Modeling':
             st.markdown('---')
             st.subheader('Algorithm')
             
-            algo = st.selectbox('algorithm', (LogisticRegression(), RandomForestClassifier()))
+            algo = st.selectbox('algorithm', (LogisticRegression(), RandomForestClassifier(), AdaBoostClassifier(), XGBClassifier()))
 
             if st.form_submit_button('Start Pipeline'):
 
@@ -159,8 +163,10 @@ elif section == 'Modeling':
                 
                 
                 st.header('Pipeline Schema')
-                st.components.v1.html(estimator_html_repr(pred), scrolling=True)
-                
+                components.html(estimator_html_repr(pred), scrolling=True)
+                with open('my_estimator.html', 'w') as f:  
+                    f.write(estimator_html_repr(pred))
+                    f.close()
                 
                 st.header('Pipeline Evaluation')
                 X_train, X_test, y_train, y_test = train_test_split(data[numeric_features + categorical_features], data[target], test_size=0.2,
