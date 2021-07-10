@@ -16,7 +16,7 @@ from xgboost import XGBClassifier
 from sklearn.utils import estimator_html_repr
 
 
-section = st.sidebar.selectbox('Section', ('Home', 'Explore Data', 'Plots', 'Modeling'))
+section = st.sidebar.selectbox('Section', ('Home', 'Upload Data', 'Explore Data', 'Modeling'))
 
 
 if section == 'Home':
@@ -27,17 +27,24 @@ if section == 'Home':
              
              Upload a csv or xls file below, before going through the modules below in the sidebar.
              ''')
-    if st.button('Import Loan Status Data', help='Small data with information in connection with loan application. The goal is to predict the loan status.'):
-        upload = 'data/data.csv'
-        st.session_state.DATA = upload
-        st.success('Loan Status Data has been chosen.')
-    else:
-        upload = st.file_uploader(label='File Here')
-        st.session_state.DATA = upload
+    
     image = 'https://images.unsplash.com/photo-1543286386-713bdd548da4?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80'
     st.image(image, 'Data is Interesting')
-elif section == 'Explore Data':
-    if st.session_state.DATA is None:
+elif section == 'Upload Data':
+    with st.form('Data chooser'):
+        import_choice = st.selectbox(label='Choose where to get your data.', options=('Loan_Data', 'Upload', 'Link'))
+        if import_choice == 'Loan_Data':
+            upload = 'data/data.csv'
+        elif import_choice == 'Upload':
+            upload = st.file_uploader(label='File Here')
+        else:
+            upload = st.text_input(label='enter link here')
+        choose_submit = st.form_submit_button('Choose data')
+        if choose_submit:
+            st.session_state.DATA = upload   
+    
+    
+    if 'DATA' not in st.session_state:
         st.title('Upload Data to Explore')
     else:
         file_type = st.selectbox(label='filetype', options=('csv', 'xls'))
@@ -52,11 +59,6 @@ elif section == 'Explore Data':
                     st.session_state.df = file
                     file
                     
-                    IF = Information(file)
-                    info = IF.information()
-                    info
-                    desc = IF.describe()
-                    desc
         elif file_type == 'xls':   
             with st.form('Import xls'):
                 st.subheader('Import xls file here')
@@ -69,14 +71,8 @@ elif section == 'Explore Data':
                     st.session_state.df = file
                     file
                     
-                    IF = Information(file)
-                    info = IF.information()
-                    info
-                    desc = IF.describe()
-                    desc
-                    
 
-elif section == 'Plots':
+elif section == 'Explore Data':
     if 'df' not in st.session_state:
         st.title('Upload Data to Explore')
     else:
@@ -113,9 +109,15 @@ elif section == 'Plots':
         st.subheader('Correlation Plots')
         components.html(corr_sl, height=400,scrolling=True)
         
-        f = open('test.html', 'w')
-        f.write(corr_sl)
-        f.close()    
+        # f = open('test.html', 'w')
+        # f.write(corr_sl)
+        # f.close()
+        
+        IF = Information(df)
+        info = IF.information()
+        info
+        desc = IF.describe()
+        desc 
         
 elif section == 'Modeling':
     if 'df' not in st.session_state:
@@ -132,11 +134,11 @@ elif section == 'Modeling':
             st.header('Contruct Pipeline')
 
             st.subheader('Predictors')
-            numeric_features = st.multiselect('Numeric Features', data.select_dtypes('number').columns)
+            numeric_features = st.multiselect('Numeric Features', data.select_dtypes('number').columns.tolist())
             numeric_transformer = [SimpleImputer(), StandardScaler()]
             st.markdown('---')
 
-            categorical_features = st.multiselect('Categorical Features', data.select_dtypes('object').columns)
+            categorical_features = st.multiselect('Categorical Features', data.select_dtypes('object').columns.tolist())
             categorical_transformer = [SimpleImputer(strategy='most_frequent'), OneHotEncoder()]
 
             st.markdown('---')
@@ -164,9 +166,9 @@ elif section == 'Modeling':
                 
                 st.header('Pipeline Schema')
                 components.html(estimator_html_repr(pred), scrolling=True)
-                with open('my_estimator.html', 'w') as f:  
-                    f.write(estimator_html_repr(pred))
-                    f.close()
+                # with open('my_estimator.html', 'w') as f:  
+                #     f.write(estimator_html_repr(pred))
+                #     f.close()
                 
                 st.header('Pipeline Evaluation')
                 X_train, X_test, y_train, y_test = train_test_split(data[numeric_features + categorical_features], data[target], test_size=0.2,
