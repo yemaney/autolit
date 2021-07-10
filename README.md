@@ -2,6 +2,8 @@
 
 Streamlining explanatory data analysis and machine-learning of tabular information, and wrapping it in a streamlit app.
 
+`Click streamlit badge above to use app.` [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/yemaney/autolit/main/main.py/)
+
 ---
 ### Work flow of app
 - Upload Data
