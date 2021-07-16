@@ -1,16 +1,30 @@
 import altair as alt
 
 class SlideShow:
- 
+    """Class used to create html slideshows of interesting altair plots.
+
+    Args:
+        charts (list): list of altair charts to display in slideshow
+        html (str): filepath to html template in src
+        css (str): filepath to css template in src
+        js (str): file path to js template in src
+    """
     
     def __init__(self, charts: list, html: str, css:str, js: str) -> None:
-
         self.charts = charts
         self.html = html
         self.css = css
         self.js = js
     
     def create(self):
+        """USed to create slide show of altair plots
+
+        Returns:
+            html gallery: A slideshow of the plots passed to the class
+        """
+        
+        
+        
         slides = ''' '''
         for i in range(len(self.charts)):
             slides += \
