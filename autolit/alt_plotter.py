@@ -78,7 +78,7 @@ class ALT_Plots:
         
         null_charts = alt.Chart(null_df).mark_bar().encode(
             x='variables:O',
-            y='Perc Null:Q'
+            y='Percent Missing:Q'
         )
         
         charts.append(null_charts)

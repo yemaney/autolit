@@ -1,4 +1,3 @@
-from altair.vegalite.v4.schema.core import BoxPlot
 import streamlit as st
 import streamlit.components.v1 as components
 from autolit.file_importer import File
