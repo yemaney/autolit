@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 import numpy as np
+from sklearn.model_selection import learning_curve
+
 
 class SNS_Plots():
     """A class used to handle all the seaborn plots in this 

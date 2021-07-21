@@ -4,24 +4,15 @@ from autolit.file_importer import File
 from autolit.data_reader import Information
 from autolit.alt_plotter import ALT_Plots
 from autolit.slide import SlideShow
-from autolit.autopipe import Autolitpred
 from autolit.sns_plotter import SNS_Plots
 
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import AdaBoostClassifier
-from xgboost import XGBClassifier
 from sklearn.utils import estimator_html_repr
 
-import altair as alt
-import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_theme()
 
-import numpy as np
+from autolit.autopipe import Autopipe
+from autolit.lr_plot import plot_learning_curve
 
 section = st.sidebar.selectbox('Section', ('Home', 'Upload Data', 'Explore Data', 'Modeling'))
 
@@ -169,54 +160,34 @@ elif section == 'Modeling':
         
     else:
         st.title('Modeling the Data')
-        
-
-        data = st.session_state.df
 
         st.markdown('---')
         with st.form('Contruct Pipeline'):
             st.header('Contruct Pipeline')
-
-            st.subheader('Predictors')
-            numeric_features = st.multiselect('Numeric Features', data.select_dtypes('number').columns.tolist())
-            numeric_transformer = [SimpleImputer(), StandardScaler()]
-            st.markdown('---')
-
-            categorical_features = st.multiselect('Categorical Features', data.select_dtypes('object').columns.tolist())
-            categorical_transformer = [SimpleImputer(strategy='most_frequent'), OneHotEncoder()]
-
-            st.markdown('---')
-            st.subheader('Target')
-
-            target = st.selectbox('Target', data.columns)
-
-            st.markdown('---')
-            st.subheader('Algorithm')
             
-            algo = st.selectbox('algorithm', (LogisticRegression(), RandomForestClassifier(), AdaBoostClassifier(), XGBClassifier()))
-
-            if st.form_submit_button('Start Pipeline'):
-
-                st.markdown('---')
-
-                al = Autolitpred(numeric_features,
-                                        categorical_features,
-                                        numeric_transformer,
-                                        categorical_transformer,
-                                        algo)
-                
-                pred = al.pipline()
-                
-                
-                st.header('Pipeline Schema')
-                components.html(estimator_html_repr(pred), scrolling=True)
-                # with open('my_estimator.html', 'w') as f:  
-                #     f.write(estimator_html_repr(pred))
-                #     f.close()
-                
-                st.header('Pipeline Evaluation')
-                X_train, X_test, y_train, y_test = train_test_split(data[numeric_features + categorical_features], data[target], test_size=0.2,
-                                                                    random_state=0)
-
-                pred.fit(X_train, y_train)
-                st.write(f'Accuracy {pred.score(X_test, y_test)}')
+            df = st.session_state.df
+            y = st.selectbox(label='Pick Target Variable', options=df.columns)
+            
+            if st.form_submit_button(label='Start the pipeline'):
+                with st.spinner(text='Contructing Pipeline'):   
+                    pipe = Autopipe(df, y)
+                    grid_search, X_test, y_test = pipe.clf_pipelin()
+                    
+                    st.header('Most importan features')
+                    X = df.drop(columns=[y])
+                    sup = grid_search.best_estimator_.named_steps['selector'].get_support()
+                    features = X[X.columns[sup]]
+                    st.dataframe(features)
+                    
+                    st.header('Best Pipeline')
+                    components.html(estimator_html_repr(grid_search.best_estimator_), scrolling=True, height=200)
+                    st.code(grid_search.best_estimator_)
+                    st.header('Best Score')
+                    st.code(grid_search.best_score_)
+                    
+                    st.header('Learning Curve Plots')
+                    X = df.drop(columns=[y])
+                    
+                    lr = plot_learning_curve(grid_search.best_estimator_, 'Pipline Learngin Curve', X_test, y_test)
+                    
+                    st.pyplot(lr)

@@ -1,50 +1,81 @@
-from sklearn.compose import make_column_transformer
-from sklearn.pipeline import make_pipeline
-from dataclasses import dataclass
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer, make_column_selector
 
-@dataclass()
-class Autolitpred:
-    
-    numeric_features: list  
-    categorical_features: list
-    numeric_transformer: list
-    categorical_transformer: list
-    predictor: object
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
 
-    """Class used to create an sklearn pipeline for the streamlit app. 
-    
-    Args:
-        numeric_features (list): list of numerical features from data to be used in the pipeline
-        categorical_features (list): list of categorical features from data to be used in the pipeline
-        numeric_transformer (list): list of sklearn API's used to preprocess the numerical data in the pipeline
-        categorical_transformer (list): list of sklearn API's used to preprocess the categorical data in the pipeline
-        predictor (sklearn object): sklearn algorithm used to predict at the end of the pipeline
-    """
-    
-    
-    def pipline(self):
-        """USed to create the sklearn pipeline using the args passed to the class
+from sklearn.impute import SimpleImputer
 
-        Returns:
-            [pipeline]: [Sklearn pipeline of the data. Ready to be trained and evaluated.]
-        """
+from sklearn.model_selection import GridSearchCV, train_test_split
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import SGDClassifier
+from sklearn.feature_selection import SelectKBest, mutual_info_classif
+
+
+class Autopipe():
+    
+    def __init__(self, df, y) -> None:
+        self.df = df
+        self.y = y
+    
+    
+    def clf_pipelin(self):
+        df = self.df
+        y = self.y
         
-        if (len(self.numeric_features) > 0) and ( len(self.categorical_features) > 0):
-                  
-            numeric_transformer = make_pipeline(*self.numeric_transformer)
-            categorical_transformer = make_pipeline(*self.categorical_transformer)
-            preprocessor = make_column_transformer(*[(numeric_transformer, self.numeric_features), 
-                                                    (categorical_transformer, self.categorical_features)])
+        numeric_features = df.select_dtypes(include="object").columns
+        categorical_features = df.select_dtypes(exclude="object").columns
         
-        elif (len(self.numeric_features) == 0) and ( len(self.categorical_features) > 0):              
-            categorical_transformer = make_pipeline(*self.categorical_transformer)
-            preprocessor = make_column_transformer(*[(categorical_transformer, self.categorical_features)])
-           
-        else:
-            numeric_transformer = make_pipeline(*self.numeric_transformer)
-            preprocessor = make_column_transformer(*[(numeric_transformer, self.numeric_features)])
-   
+        
+        numeric_transformer = Pipeline(steps=[
+            ('imputer', SimpleImputer()),
+            ('scaler', StandardScaler())
+        ])
+        
+
+        categorical_transformer = OneHotEncoder(handle_unknown="ignore")
+        
+        
+        preprocessor  = ColumnTransformer(
+            transformers=[
+                ('num', numeric_transformer, make_column_selector(dtype_include='number')),
+                ('cat', categorical_transformer, make_column_selector(dtype_include=object))
+            ]
+        )
 
 
-        pipeline = make_pipeline(*[preprocessor, self.predictor])
-        return pipeline
+        clf = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            ('selector', SelectKBest(mutual_info_classif, k=5)),
+            ('classifier', LogisticRegression())
+        ])
+        
+        
+        X = df.drop(y, axis=1)
+        y = df[y]
+        
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=20, random_state=42)
+        
+
+        param_grid = [
+            {'preprocessor__num__imputer__strategy': ['mean', 'median']},
+            {'selector__k': [2, 3, 5, 7]},
+            {'classifier': [RandomForestClassifier()],
+            'classifier__criterion': ['gini', 'entropy']},
+            {'classifier': [SGDClassifier()],
+            'classifier__penalty': ['l2', 'l1', 'elasticnet']},
+            {'classifier': [KNeighborsClassifier()],
+            'classifier__n_neighbors': [3, 7, 11],
+            'classifier__weights': ['uniform', 'distance']}
+        ]
+        
+        
+        grid_search = GridSearchCV(clf, param_grid, cv=3, verbose=2)
+        
+        
+        grid_search.fit(X_train, y_train)
+        
+        return grid_search, X_test, y_test
