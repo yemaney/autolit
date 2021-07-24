@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 import numpy as np
+import pandas as pd
+
 
 class SNS_Plots():
     """A class used to handle all the seaborn plots in this 
@@ -122,3 +124,24 @@ class SNS_Plots():
         fig, ax = plt.subplots()
         ax = sns.heatmap(heatmap, cmap="YlGnBu")
         return fig        
+    
+    
+
+class Feature_Importace: 
+    
+    def __init__(self) -> None:
+        pass
+        
+    def plot(self, X: pd.DataFrame, scores):
+        dic = {}
+        for x, y in zip(X.columns, scores):
+            dic[x] = y
+            
+        df_scores = pd.DataFrame.from_dict(dic, orient='index').transpose()
+        
+        fig, ax = plt.subplots()
+        ax = sns.barplot(data=df_scores)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=40, ha="right")
+        plt.tight_layout()
+        
+        return fig

@@ -4,16 +4,17 @@ from autolit.file_importer import File
 from autolit.data_reader import Information
 from autolit.alt_plotter import ALT_Plots
 from autolit.slide import SlideShow
-from autolit.sns_plotter import SNS_Plots
+from autolit.sns_plotter import SNS_Plots, Feature_Importace
 
 from sklearn.utils import estimator_html_repr
 
+import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_theme()
 
 from autolit.autopipe import Autopipe
 from autolit.lr_plot import plot_learning_curve
-
+import pandas as pd
 section = st.sidebar.selectbox('Section', ('Home', 'Upload Data', 'Explore Data', 'Modeling'))
 
 
@@ -176,8 +177,11 @@ elif section == 'Modeling':
                     st.header('Most importan features')
                     X = df.drop(columns=[y])
                     sup = grid_search.best_estimator_.named_steps['selector'].get_support()
-                    features = X[X.columns[sup]]
-                    st.dataframe(features)
+                    scores = grid_search.best_estimator_.named_steps['selector'].scores_
+
+                    feature_plots = Feature_Importace()
+                    feature_plots = feature_plots.plot(X, scores)
+                    st.pyplot(feature_plots)
                     
                     st.header('Best Pipeline')
                     components.html(estimator_html_repr(grid_search.best_estimator_), scrolling=True, height=200)
