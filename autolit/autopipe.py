@@ -10,13 +10,11 @@ from sklearn.impute import SimpleImputer
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 
 # regressors
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import SGDRegressor
 from sklearn.svm import SVR
 
 # selection 
@@ -158,8 +156,6 @@ class Autopipe():
             {'selector__k': [2, 3, 5, 7]},
             {'classifier': [RandomForestRegressor()],
             'classifier__criterion': ['mse', 'mae']},
-            {'classifier': [SGDRegressor()],
-            'classifier__penalty': ['l2', 'l1', 'elasticnet']},
             {'classifier': [SVR()],
             'classifier__kernel': ['linear', 'poly', 'rbf', 'sigmoid']}
         ]
