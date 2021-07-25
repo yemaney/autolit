@@ -177,9 +177,9 @@ elif section == 'Modeling':
                 with st.spinner(text='Contructing Pipeline'):   
                     pipe = Autopipe(df, y)
                     if estimator == 'Classification':
-                        grid_search, X_test, y_test = pipe.clf_pipelin()
+                        grid_search, X_test, y_test = pipe.clf_pipeline()
                     else:
-                        grid_search, X_test, y_test = pipe.reg_pipelin()
+                        grid_search, X_test, y_test = pipe.reg_pipeline()
                         
                     st.header('Feature Importance')
                     X = df.drop(columns=[y])

@@ -1,23 +1,27 @@
+# pipeline imports
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer, make_column_selector
 
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder
-
+# preprocessors
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
 
-from sklearn.model_selection import GridSearchCV, train_test_split
-
+# classifiers
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import SGDClassifier
+from sklearn.svm import SVC
 
+# regressors
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import SGDRegressor
-from sklearn.svm import LinearSVR
+from sklearn.svm import SVR
 
+# selection 
 from sklearn.feature_selection import SelectKBest, mutual_info_classif, mutual_info_regression
+from sklearn.model_selection import GridSearchCV, train_test_split
 
 
 class Autopipe():
@@ -27,12 +31,23 @@ class Autopipe():
         self.y = y
     
     
-    def clf_pipelin(self):
+    def clf_pipeline(self):
+        """Class method used to create a simple classification pipeline, and gridsearchs for the best combination
+        of feature preprocessing, selections and model selection, hyperparameter tuning
+
+        Returns:
+            gridsearch: outcome of custom sklearn classification pipeline gridsearch
+            X_train: Validation set of predictor variables
+            y_train: Validation set of target variables
+        """
+        
+        
+        
+        
+        
         df = self.df
         y = self.y
         
-        numeric_features = df.select_dtypes(include="object").columns
-        categorical_features = df.select_dtypes(exclude="object").columns
         
         
         numeric_transformer = Pipeline(steps=[
@@ -71,10 +86,10 @@ class Autopipe():
             {'selector__k': [2, 3, 5, 7]},
             {'classifier': [RandomForestClassifier()],
             'classifier__criterion': ['gini', 'entropy']},
-            {'classifier': [SGDClassifier()],
-            'classifier__penalty': ['l2', 'l1', 'elasticnet']},
+            {'classifier': [SVC()],
+            'classifier__kernel': ['linear', 'poly', 'rbf', 'sigmoid']},
             {'classifier': [KNeighborsClassifier()],
-            'classifier__n_neighbors': [3, 7, 11],
+            'classifier__n_neighbors': [2, 3, 4],
             'classifier__weights': ['uniform', 'distance']}
         ]
         
@@ -88,12 +103,23 @@ class Autopipe():
     
     
     
-    def reg_pipelin(self):
+    def reg_pipeline(self):
+        """Class method used to create a simple classification pipeline, and gridsearchs for the best combination
+        of feature preprocessing, selections and model selection, hyperparameter tuning
+
+        Returns:
+            gridsearch: outcome of custom sklearn classification pipeline gridsearch
+            X_train: Validation set of predictor variables
+            y_train: Validation set of target variables
+        """       
+        
+        
+        
+        
+        
         df = self.df
         y = self.y
         
-        numeric_features = df.select_dtypes(include="object").columns
-        categorical_features = df.select_dtypes(exclude="object").columns
         
         
         numeric_transformer = Pipeline(steps=[
@@ -134,8 +160,8 @@ class Autopipe():
             'classifier__criterion': ['mse', 'mae']},
             {'classifier': [SGDRegressor()],
             'classifier__penalty': ['l2', 'l1', 'elasticnet']},
-            {'classifier': [LinearSVR()],
-            'classifier__C': [0.1, 1, 10]}
+            {'classifier': [SVR()],
+            'classifier__kernel': ['linear', 'poly', 'rbf', 'sigmoid']}
         ]
         
         
