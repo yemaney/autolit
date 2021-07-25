@@ -4,7 +4,7 @@ from autolit.file_importer import File
 from autolit.data_reader import Information
 from autolit.alt_plotter import ALT_Plots
 from autolit.slide import SlideShow
-from autolit.sns_plotter import SNS_Plots, Feature_Importace
+from autolit.sns_plotter import SNS_Plots, Feature_Importance
 
 from sklearn.utils import estimator_html_repr
 
@@ -168,18 +168,22 @@ elif section == 'Modeling':
             
             df = st.session_state.df
             y = st.selectbox(label='Pick Target Variable', options=df.columns)
-            
+            estimator = st.selectbox(label='Regression or Classification', options=('Regression', 'Classification'))
+
             if st.form_submit_button(label='Start the pipeline'):
                 with st.spinner(text='Contructing Pipeline'):   
                     pipe = Autopipe(df, y)
-                    grid_search, X_test, y_test = pipe.clf_pipelin()
-                    
-                    st.header('Most importan features')
+                    if estimator == 'Classification':
+                        grid_search, X_test, y_test = pipe.clf_pipelin()
+                    else:
+                        grid_search, X_test, y_test = pipe.reg_pipelin()
+                        
+                    st.header('Feature Importance')
                     X = df.drop(columns=[y])
                     sup = grid_search.best_estimator_.named_steps['selector'].get_support()
                     scores = grid_search.best_estimator_.named_steps['selector'].scores_
-
-                    feature_plots = Feature_Importace()
+                    
+                    feature_plots = Feature_Importance()
                     feature_plots = feature_plots.plot(X, scores)
                     st.pyplot(feature_plots)
                     

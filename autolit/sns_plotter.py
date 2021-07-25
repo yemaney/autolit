@@ -127,7 +127,7 @@ class SNS_Plots():
     
     
 
-class Feature_Importace: 
+class Feature_Importance: 
     
     def __init__(self) -> None:
         pass

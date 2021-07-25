@@ -11,7 +11,13 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import SGDClassifier
-from sklearn.feature_selection import SelectKBest, mutual_info_classif
+
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import SGDRegressor
+from sklearn.svm import LinearSVR
+
+from sklearn.feature_selection import SelectKBest, mutual_info_classif, mutual_info_regression
 
 
 class Autopipe():
@@ -70,6 +76,66 @@ class Autopipe():
             {'classifier': [KNeighborsClassifier()],
             'classifier__n_neighbors': [3, 7, 11],
             'classifier__weights': ['uniform', 'distance']}
+        ]
+        
+        
+        grid_search = GridSearchCV(clf, param_grid, cv=3, verbose=2)
+        
+        
+        grid_search.fit(X_train, y_train)
+        
+        return grid_search, X_test, y_test
+    
+    
+    
+    def reg_pipelin(self):
+        df = self.df
+        y = self.y
+        
+        numeric_features = df.select_dtypes(include="object").columns
+        categorical_features = df.select_dtypes(exclude="object").columns
+        
+        
+        numeric_transformer = Pipeline(steps=[
+            ('imputer', SimpleImputer()),
+            ('scaler', StandardScaler())
+        ])
+        
+
+        categorical_transformer = OneHotEncoder(handle_unknown="ignore")
+        
+        
+        preprocessor  = ColumnTransformer(
+            transformers=[
+                ('num', numeric_transformer, make_column_selector(dtype_include='number')),
+                ('cat', categorical_transformer, make_column_selector(dtype_include=object))
+            ]
+        )
+
+
+        clf = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            ('selector', SelectKBest(mutual_info_regression, k=5)),
+            ('classifier', LinearRegression())
+        ])
+        
+        
+        X = df.drop(y, axis=1)
+        y = df[y]
+        
+        
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=20, random_state=42)
+        
+
+        param_grid = [
+            {'preprocessor__num__imputer__strategy': ['mean', 'median']},
+            {'selector__k': [2, 3, 5, 7]},
+            {'classifier': [RandomForestRegressor()],
+            'classifier__criterion': ['mse', 'mae']},
+            {'classifier': [SGDRegressor()],
+            'classifier__penalty': ['l2', 'l1', 'elasticnet']},
+            {'classifier': [LinearSVR()],
+            'classifier__C': [0.1, 1, 10]}
         ]
         
         
