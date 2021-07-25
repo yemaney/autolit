@@ -44,7 +44,7 @@ Streamlining explanatory data analysis and machine-learning of tabular informati
 │          file_importer.py
 │          lr_plot.py
 │          slide.py
-│           sns_plotter.py
+│          sns_plotter.py
 │      
 │ 
 │
