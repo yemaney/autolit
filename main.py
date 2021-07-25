@@ -8,13 +8,11 @@ from autolit.sns_plotter import SNS_Plots, Feature_Importance
 
 from sklearn.utils import estimator_html_repr
 
-import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set_theme()
 
 from autolit.autopipe import Autopipe
 from autolit.lr_plot import plot_learning_curve
-import pandas as pd
 section = st.sidebar.selectbox('Section', ('Home', 'Upload Data', 'Explore Data', 'Modeling'))
 
 
@@ -41,13 +39,18 @@ if section == 'Home':
 elif section == 'Upload Data':
     st.write('''
             How to upload:
-            - Choose where to get your data. Either upload your own, use link, or default loan data
+            - Choose where to get your data. Either upload your own, use link, or toy datasets Iris and Boston
             - Confirm the data type (csv or xls)
-            - Import the data''')
+            - Import the data
+            
+            ---
+            ''')
     with st.form('Data chooser'):
-        import_choice = st.selectbox(label='Choose where to get your data.', options=('Loan_Data', 'Upload', 'Link'))
-        if import_choice == 'Loan_Data':
-            upload = 'data/data.csv'
+        import_choice = st.selectbox(label='Choose where to get your data.', options=('Iris (classification)', 'Boston (regression)', 'Upload', 'Link'))
+        if import_choice == 'Iris (classification)':
+            upload = 'https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv'
+        elif import_choice == 'Boston (regression)':
+            upload = 'https://raw.githubusercontent.com/eric-bunch/boston_housing/master/boston.csv'
         elif import_choice == 'Upload':
             upload = st.file_uploader(label='File Here')
         else:
