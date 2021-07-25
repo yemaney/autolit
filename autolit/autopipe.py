@@ -102,11 +102,11 @@ class Autopipe():
     
     
     def reg_pipeline(self):
-        """Class method used to create a simple classification pipeline, and gridsearchs for the best combination
+        """Class method used to create a simple regression pipeline, and gridsearchs for the best combination
         of feature preprocessing, selections and model selection, hyperparameter tuning
 
         Returns:
-            gridsearch: outcome of custom sklearn classification pipeline gridsearch
+            gridsearch: outcome of custom sklearn regression pipeline gridsearch
             X_train: Validation set of predictor variables
             y_train: Validation set of target variables
         """       
